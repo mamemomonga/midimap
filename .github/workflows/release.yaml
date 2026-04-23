@@ -62,7 +62,7 @@ jobs:
             [ -f "$f" ] && cp "$f" "pkg/${NAME}/"
           done
           # scripts ディレクトリ(あれば丸ごと)
-          [ -d scripts ] && cp -r script "pkg/${NAME}/"
+          [ -d scripts ] && cp -r scripts "pkg/${NAME}/"
           tar czf "${NAME}.tar.gz" -C pkg "${NAME}"
           echo "ASSET=${NAME}.tar.gz" >> "$GITHUB_ENV"
       
@@ -81,12 +81,13 @@ jobs:
           }
           Compress-Archive -Path "pkg/$name/*" -DestinationPath "$name.zip"
           "ASSET=$name.zip" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
-            - name: Upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: midimap-${{ matrix.goos }}-${{ matrix.goarch }}
-                path: ${{ env.ASSET }}
-                retention-days: 7
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: midimap-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ${{ env.ASSET }}
+          retention-days: 7
 
   release:
     needs: build

@@ -1,0 +1,106 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # Release 作成用
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14,          goos: darwin,  goarch: arm64, ext: '',     archive: tar.gz }
+          - { os: macos-13,          goos: darwin,  goarch: amd64, ext: '',     archive: tar.gz }
+          - { os: windows-2022,      goos: windows, goarch: amd64, ext: '.exe', archive: zip }
+          - { os: ubuntu-22.04,      goos: linux,   goarch: amd64, ext: '',     archive: tar.gz }
+          - { os: ubuntu-22.04-arm,  goos: linux,   goarch: arm64, ext: '',     archive: tar.gz }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Install ALSA (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
+
+      - name: Extract version
+        id: ver
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        shell: bash
+        env:
+          CGO_ENABLED: '1'
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          mkdir -p dist
+          go build -ldflags "-s -w -X main.version=${VERSION}" \
+            -o "dist/midimap${{ matrix.ext }}" .
+
+      - name: Package (tar.gz)
+        if: matrix.archive == 'tar.gz'
+        shell: bash
+        run: |
+          NAME="midimap-${{ steps.ver.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          mkdir -p "pkg/${NAME}"
+          cp "dist/midimap" "pkg/${NAME}/"
+          cp config.lua README.md "pkg/${NAME}/" 2>/dev/null || true
+          tar czf "${NAME}.tar.gz" -C pkg "${NAME}"
+          echo "ASSET=${NAME}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Package (zip)
+        if: matrix.archive == 'zip'
+        shell: pwsh
+        run: |
+          $name = "midimap-${{ steps.ver.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          New-Item -ItemType Directory -Force -Path "pkg/$name" | Out-Null
+          Copy-Item "dist/midimap.exe" "pkg/$name/"
+          if (Test-Path "config.lua") { Copy-Item "config.lua" "pkg/$name/" }
+          if (Test-Path "README.md")  { Copy-Item "README.md"  "pkg/$name/" }
+          Compress-Archive -Path "pkg/$name/*" -DestinationPath "$name.zip"
+          "ASSET=$name.zip" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: midimap-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ${{ env.ASSET }}
+          retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+  

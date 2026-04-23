@@ -21,10 +21,10 @@ Route MIDI from one port to another through a Lua script that transforms notes, 
 midimap -l
 
 # 2. Run the remapper
-midimap -i 0 -o 1 -s config.lua
+midimap -i 0 -o 1 -s scripts/example.lua
 
 # 3. With verbose logging
-midimap -i 0 -o 1 -s config.lua -v
+midimap -i 0 -o 1 -s scripts/example.lua -v
 ```
 
 ## Installation

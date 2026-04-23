@@ -57,10 +57,15 @@ jobs:
           NAME="midimap-${{ steps.ver.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
           mkdir -p "pkg/${NAME}"
           cp "dist/midimap" "pkg/${NAME}/"
-          cp config.lua README.md "pkg/${NAME}/" 2>/dev/null || true
+          # 付属ファイル(あるものだけ)
+          for f in README.md README-ja.md LICENSE; do
+            [ -f "$f" ] && cp "$f" "pkg/${NAME}/"
+          done
+          # scripts ディレクトリ(あれば丸ごと)
+          [ -d scripts ] && cp -r script "pkg/${NAME}/"
           tar czf "${NAME}.tar.gz" -C pkg "${NAME}"
           echo "ASSET=${NAME}.tar.gz" >> "$GITHUB_ENV"
-
+      
       - name: Package (zip)
         if: matrix.archive == 'zip'
         shell: pwsh
@@ -68,17 +73,20 @@ jobs:
           $name = "midimap-${{ steps.ver.outputs.version }}-${{ matrix.goos }}-${{ matrix.goarch }}"
           New-Item -ItemType Directory -Force -Path "pkg/$name" | Out-Null
           Copy-Item "dist/midimap.exe" "pkg/$name/"
-          if (Test-Path "config.lua") { Copy-Item "config.lua" "pkg/$name/" }
-          if (Test-Path "README.md")  { Copy-Item "README.md"  "pkg/$name/" }
+          foreach ($f in @("README.md", "README-ja.md", "LICENSE")) {
+            if (Test-Path $f) { Copy-Item $f "pkg/$name/" }
+          }
+          if (Test-Path "scripts") {
+            Copy-Item "scripts" "pkg/$name/" -Recurse
+          }
           Compress-Archive -Path "pkg/$name/*" -DestinationPath "$name.zip"
           "ASSET=$name.zip" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: midimap-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: ${{ env.ASSET }}
-          retention-days: 7
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: midimap-${{ matrix.goos }}-${{ matrix.goarch }}
+                path: ${{ env.ASSET }}
+                retention-days: 7
 
   release:
     needs: build

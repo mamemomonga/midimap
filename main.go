@@ -23,21 +23,21 @@ const usage = `midimap - MIDI remapper scripted in Lua
 
 USAGE:
   midimap -l
-  midimap -i <in> -o <out> [-s config.lua] [-v]
+  midimap -i <in> -o <out> -s <script.lua> [-v]
 
 OPTIONS:
   -i, -in <port>       MIDI input port (name substring or number from -l)
   -o, -out <port>      MIDI output port (name substring or number from -l)
+  -s, -script <file>   Lua remap script (required)
   -l, -list            List available MIDI ports and exit
-  -s, -script <file>   Lua remap script (default: config.lua)
   -v, -verbose         Print every MIDI event (in and out)
   -V, -version         Show version and exit
   -h, -help            Show this help
 
 EXAMPLES:
   midimap -l
-  midimap -i 0 -o 1
-  midimap -i midimap-in -o midimap-out -s myrules.lua -v
+  midimap -i 0 -o 1 -s scripts/example.lua
+  midimap -i midimap-in -o midimap-out -s scripts/mixer.lua -v
 `
 
 // 片方を長短どちらで書いても同じ変数を共有するフラグ
@@ -76,7 +76,7 @@ func main() {
 
 	inFlag.register(fs, "", "MIDI input port (name or number)")
 	outFlag.register(fs, "", "MIDI output port (name or number)")
-	scriptFlag.register(fs, "config.lua", "Lua remap script")
+	scriptFlag.register(fs, "", "Lua remap script (required)")
 	listFlag.register(fs, "list available MIDI ports")
 	verboseFlag.register(fs, "print every MIDI event")
 	versionFlag.register(fs, "show version and exit")
@@ -104,8 +104,8 @@ func main() {
 		return
 	}
 
-	if inFlag.value == "" || outFlag.value == "" {
-		fmt.Fprintln(os.Stderr, "error: -in and -out are required")
+	if inFlag.value == "" || outFlag.value == "" || scriptFlag.value == "" {
+		fmt.Fprintln(os.Stderr, "error: -in, -out, and -script are required")
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(2)
 	}
@@ -177,6 +177,7 @@ func run(inSpec, outSpec, script string, verbose bool) error {
 	L := lua.NewState()
 	defer L.Close()
 	registerAPI(L, sendFn)
+
 	if err := L.DoFile(script); err != nil {
 		return fmt.Errorf("lua load: %w", err)
 	}

@@ -3,7 +3,7 @@
 BINARY   := midimap
 PKG      := .
 BUILD_DIR := bin
-SCRIPT   := config.lua
+SCRIPT   ?=
 
 # バージョン情報をビルドに埋め込む(git 管理下でなくても落ちないように)
 VERSION  := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
@@ -26,8 +26,8 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make build"
-	@echo "  make run IN=0 OUT=1"
-	@echo "  make run IN=midimap-in OUT=midimap-out ARGS=-v"
+	@echo "  make run IN=0 OUT=1 SCRIPT=scripts/example.lua"
+	@echo "  make dev IN=0 OUT=1 SCRIPT=scripts/example.lua"
 	@echo "  make list"
 
 ## build: バイナリを bin/ にビルド
@@ -36,14 +36,14 @@ build:
 	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY) $(PKG)
 	@echo "Built: $(BUILD_DIR)/$(BINARY) ($(VERSION))"
 
-## run: ビルドして実行 (IN, OUT, ARGS で引数指定)
+## run: ビルドして実行 (IN, OUT, SCRIPT で引数指定)
 run: build
-	@if [ -z "$(IN)" ] || [ -z "$(OUT)" ]; then \
-		echo "Usage: make run IN=<port> OUT=<port> [ARGS=\"-v\"]"; \
+	@if [ -z "$(IN)" ] || [ -z "$(OUT)" ] || [ -z "$(SCRIPT)" ]; then \
+		echo "Usage: make run IN=<port> OUT=<port> SCRIPT=<script.lua> [ARGS=\"-v\"]"; \
 		echo "Run 'make list' to see available ports."; \
 		exit 1; \
 	fi
-	./$(BUILD_DIR)/$(BINARY) -i "$(IN)" -o "$(OUT)" -script $(SCRIPT) $(ARGS)
+	./$(BUILD_DIR)/$(BINARY) -i "$(IN)" -o "$(OUT)" -s $(SCRIPT) $(ARGS)
 
 ## list: MIDI ポート一覧を表示
 list: build

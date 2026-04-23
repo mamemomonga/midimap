@@ -126,7 +126,7 @@ Or use JACK/Pipewire's built-in MIDI routing if already installed.
 
 ```
 midimap -l
-midimap -i <in> -o <out> [-s config.lua] [-v]
+midimap -i <in> -o <out> -s <script.lua> [-v]
 ```
 
 ### Options
@@ -136,7 +136,7 @@ midimap -i <in> -o <out> [-s config.lua] [-v]
 | `-i`, `-in <port>` | MIDI input port (name substring or number from `-l`) |
 | `-o`, `-out <port>` | MIDI output port (name substring or number from `-l`) |
 | `-l`, `-list` | List available MIDI ports and exit |
-| `-s`, `-script <file>` | Lua remap script (default: `config.lua`) |
+| `-s`, `-script <file>` | Lua remap script (required) |
 | `-v`, `-verbose` | Print every MIDI event (IN and OUT) |
 | `-V`, `-version` | Show version and exit |
 | `-h`, `-help` | Show help |
@@ -206,6 +206,19 @@ end
 | `send_note_off(ch, note, vel)` | `vel` is accepted but ignored in output |
 | `send_cc(ch, cc, val)` | |
 
+### Channel numbering
+
+MIDI channel values in Lua use **0–15** (not 1–16 as shown in DAWs).
+
+| DAW display | Lua value |
+|-------------|-----------|
+| Ch 1        | 0         |
+| Ch 2        | 1         |
+| ...         | ...       |
+| Ch 16       | 15        |
+
+Note and CC numbers are 0–127 as usual.
+
 ### Example: transpose + CC remap
 
 ```lua
@@ -236,7 +249,7 @@ function on_cc(ch, cc, val)
 end
 ```
 
-See `config.lua` for a working example.
+See `scripts/example.lua` for a working example.
 
 ## Building from Source
 

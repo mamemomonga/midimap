@@ -150,7 +150,6 @@ func findOutPort(spec string) (drivers.Out, error) {
 }
 
 func run(inSpec, outSpec, script string, verbose bool) error {
-	// 何があってもドライバを閉じる
 	defer midi.CloseDriver()
 
 	in, err := findInPort(inSpec)
@@ -167,13 +166,12 @@ func run(inSpec, outSpec, script string, verbose bool) error {
 		return err
 	}
 
-	// verbose 時は送信時にもログを出したいのでラップ
-	sendFn := send
-	if verbose {
-		sendFn = func(msg midi.Message) error {
-			logMsg("OUT", msg)
-			return send(msg)
-		}
+	logger := &eventLogger{enabled: verbose}
+
+	// 送信時にラウンドバッファへ記録
+	sendFn := func(msg midi.Message) error {
+		logger.recordOut(msg)
+		return send(msg)
 	}
 
 	L := lua.NewState()
@@ -186,12 +184,11 @@ func run(inSpec, outSpec, script string, verbose bool) error {
 	var mu sync.Mutex
 
 	stop, err := midi.ListenTo(in, func(msg midi.Message, ts int32) {
-		if verbose {
-			logMsg("IN ", msg)
-		}
 		mu.Lock()
 		defer mu.Unlock()
+		logger.beginRound(msg)
 		dispatch(L, msg)
+		logger.endRound()
 	}, midi.UseSysEx())
 	if err != nil {
 		return err
@@ -209,21 +206,6 @@ func run(inSpec, outSpec, script string, verbose bool) error {
 	signal.Stop(sig)
 
 	fmt.Println("\nShutting down...")
-	stop() // リスナー停止(panic防止のため CloseDriver より先に)
+	stop()
 	return nil
-}
-
-// verbose 用のログ
-func logMsg(tag string, msg midi.Message) {
-	var ch, k, v uint8
-	switch {
-	case msg.GetNoteOn(&ch, &k, &v):
-		fmt.Printf("%s NoteOn  ch=%2d note=%3d vel=%3d\n", tag, ch, k, v)
-	case msg.GetNoteOff(&ch, &k, &v):
-		fmt.Printf("%s NoteOff ch=%2d note=%3d vel=%3d\n", tag, ch, k, v)
-	case msg.GetControlChange(&ch, &k, &v):
-		fmt.Printf("%s CC      ch=%2d cc=%3d val=%3d\n", tag, ch, k, v)
-	default:
-		fmt.Printf("%s %s\n", tag, msg.String())
-	}
 }

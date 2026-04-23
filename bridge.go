@@ -15,8 +15,6 @@ func dispatch(L *lua.LState, msg midi.Message) {
 		callLua(L, "on_note_off", float64(ch), float64(k), float64(v))
 	case msg.GetControlChange(&ch, &k, &v):
 		callLua(L, "on_cc", float64(ch), float64(k), float64(v))
-	default:
-		// Pitchbend, program change 等、必要に応じて追加
 	}
 }
 
@@ -37,6 +35,7 @@ func callLua(L *lua.LState, fn string, args ...float64) {
 
 // Luaから呼び出せるMIDI送信API
 func registerAPI(L *lua.LState, send func(midi.Message) error) {
+	// 3引数 (ch, key, val) 用 — NoteOn, ControlChange
 	send3 := func(build func(ch, k, v uint8) midi.Message) lua.LGFunction {
 		return func(L *lua.LState) int {
 			ch := uint8(L.CheckInt(1))
@@ -49,7 +48,20 @@ func registerAPI(L *lua.LState, send func(midi.Message) error) {
 		}
 	}
 
+	// 2引数 (ch, key) 用 — NoteOff
+	send2 := func(build func(ch, k uint8) midi.Message) lua.LGFunction {
+		return func(L *lua.LState) int {
+			ch := uint8(L.CheckInt(1))
+			k := uint8(L.CheckInt(2))
+			// Lua側が3引数で呼んでも第3引数は無視
+			if err := send(build(ch, k)); err != nil {
+				L.RaiseError("send failed: %v", err)
+			}
+			return 0
+		}
+	}
+
 	L.SetGlobal("send_note_on", L.NewFunction(send3(midi.NoteOn)))
-	L.SetGlobal("send_note_off", L.NewFunction(send3(midi.NoteOff)))
+	L.SetGlobal("send_note_off", L.NewFunction(send2(midi.NoteOff)))
 	L.SetGlobal("send_cc", L.NewFunction(send3(midi.ControlChange)))
 }

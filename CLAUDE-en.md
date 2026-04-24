@@ -66,6 +66,19 @@ See `formatMsg` and `eventLogger` in bridge.go for details.
 - Do not add new cgo-dependent dependencies (unless strictly necessary)
 - README.md (Japanese) and README-en.md (English) must always stay in sync
 
+## Documentation Translation Policy
+
+- Japanese is the primary source; English is auto-generated
+  - `CLAUDE.md` ⇒ `CLAUDE-en.md` (Claude Code does not read this)
+  - `README.md` ⇒ `README-en.md`
+- Translation rules:
+  - Keep technical terms (cgo, goroutine, MIDI, CC, etc.) in English
+  - Do not alter code blocks, file paths, or command examples
+  - Preserve Markdown structure (headings, lists, tables) exactly
+  - Use natural technical English; avoid verbosity
+- Do not hand-edit the English version (it will be overwritten by the next translation)
+- To run the translation: `make translate` or `/translate-docs` in a session
+
 ## Do Not
 
 - Make `-s` optional with a default value

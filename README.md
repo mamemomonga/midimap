@@ -308,19 +308,6 @@ xattr -d com.apple.quarantine midimap
 ### Luaスクリプトのエラーが表示されるがクラッシュしない
 エラーはstderrに出力され、リマッパーは動作を継続します。スクリプトを修正して再起動してください。
 
-## ドキュメントの翻訳方針
-
-- 日本語がプライマリ、英語は自動生成
-  - `CLAUDE.md` ⇒ `CLAUDE-en.md`(Claude Code は参照しない)
-  - `README.md` ⇒ `README-en.md`
-- 翻訳ルール:
-  - 技術用語 (cgo, goroutine, MIDI, CC 等) は英語のまま
-  - コードブロック・ファイルパス・コマンド例は改変しない
-  - Markdown構造(見出し、リスト、表)は完全維持
-  - 自然な技術英語で、冗長にしない
-- 英語版を手で編集しないこと(次回翻訳で上書きされる)
-- 翻訳の実行: `make translate` または セッションで `/translate-docs`
-
 ## 依存ライブラリ
 
 - [gomidi/midi](https://gitlab.com/gomidi/midi) — MIDI I/O(内部でRtMidiを使用)

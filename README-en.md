@@ -308,19 +308,6 @@ This is expected. Many keyboards send Note Off as "Note On with velocity 0". The
 **Lua script errors print but don't crash**
 Errors are logged to stderr; the remapper keeps running. Fix the script and restart.
 
-## Documentation Translation Policy
-
-- Japanese is the primary source; English is auto-generated
-  - `CLAUDE.md` ⇒ `CLAUDE-en.md` (Claude Code does not read this)
-  - `README.md` ⇒ `README-en.md`
-- Translation rules:
-  - Keep technical terms (cgo, goroutine, MIDI, CC, etc.) in English
-  - Do not alter code blocks, file paths, or command examples
-  - Preserve Markdown structure (headings, lists, tables) exactly
-  - Use natural technical English; avoid verbosity
-- Do not hand-edit the English version (it will be overwritten by the next translation)
-- To run the translation: `make translate` or `/translate-docs` in a session
-
 ## Dependencies
 
 - [gomidi/midi](https://gitlab.com/gomidi/midi) — MIDI I/O (uses RtMidi under the hood)

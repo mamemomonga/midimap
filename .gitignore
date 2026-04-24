@@ -1,1 +1,18 @@
-/bin
+# Build artifacts
+bin/
+dist/
+pkg/
+
+# Go
+*.test
+*.out
+vendor/
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Claude Code
+.claude/local/

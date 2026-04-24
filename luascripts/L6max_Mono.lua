@@ -46,7 +46,7 @@ function on_cc(ch, cc, val)
     local l6chs = remap_l6chs[cc]
     if l6chs then
         for _, dcc in ipairs(l6chs) do
-            send_cc(0, dcc, val)
+            send_cc(L6Channel, dcc, val)
         end
     end
 end

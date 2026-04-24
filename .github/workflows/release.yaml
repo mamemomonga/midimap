@@ -47,6 +47,12 @@ jobs:
           VERSION: ${{ steps.ver.outputs.version }}
         run: |
           mkdir -p dist
+          # Apple Silicon ランナー(macos-14)から darwin-amd64 をクロスビルドする際は
+          # 最小対応 macOS を明示して古い Intel Mac でも動くようにする
+          if [ "${GOOS}" = "darwin" ] && [ "${GOARCH}" = "amd64" ]; then
+            export CGO_CFLAGS="-target x86_64-apple-macos11"
+            export CGO_LDFLAGS="-target x86_64-apple-macos11"
+          fi
           go build -ldflags "-s -w -X main.version=${VERSION}" \
             -o "dist/midimap${{ matrix.ext }}" .
 
@@ -61,8 +67,8 @@ jobs:
           for f in README.md README-ja.md LICENSE; do
             [ -f "$f" ] && cp "$f" "pkg/${NAME}/"
           done
-          # scripts ディレクトリ(あれば丸ごと)
-          [ -d scripts ] && cp -r scripts "pkg/${NAME}/"
+          # luascripts ディレクトリ(あれば丸ごと)
+          [ -d luascripts ] && cp -r luascripts "pkg/${NAME}/"
           tar czf "${NAME}.tar.gz" -C pkg "${NAME}"
           echo "ASSET=${NAME}.tar.gz" >> "$GITHUB_ENV"
       
@@ -76,8 +82,8 @@ jobs:
           foreach ($f in @("README.md", "README-ja.md", "LICENSE")) {
             if (Test-Path $f) { Copy-Item $f "pkg/$name/" }
           }
-          if (Test-Path "scripts") {
-            Copy-Item "scripts" "pkg/$name/" -Recurse
+          if (Test-Path "luascripts") {
+            Copy-Item "luascripts" "pkg/$name/" -Recurse
           }
           Compress-Archive -Path "pkg/$name/*" -DestinationPath "$name.zip"
           "ASSET=$name.zip" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV

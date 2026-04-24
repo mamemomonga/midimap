@@ -47,6 +47,12 @@ jobs:
           VERSION: ${{ steps.ver.outputs.version }}
         run: |
           mkdir -p dist
+          # Apple Silicon ランナー(macos-14)から darwin-amd64 をクロスビルドする際は
+          # 最小対応 macOS を明示して古い Intel Mac でも動くようにする
+          if [ "${GOOS}" = "darwin" ] && [ "${GOARCH}" = "amd64" ]; then
+            export CGO_CFLAGS="-target x86_64-apple-macos11"
+            export CGO_LDFLAGS="-target x86_64-apple-macos11"
+          fi
           go build -ldflags "-s -w -X main.version=${VERSION}" \
             -o "dist/midimap${{ matrix.ext }}" .
 

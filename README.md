@@ -1,33 +1,33 @@
 # midimap
 
-A lightweight MIDI remapper scripted in Lua.
+Luaでリマッピングルールを記述する軽量MIDIリマッパー。
 
-[日本語版 / Japanese README](./README-ja.md)
+[English README](./README-en.md)
 
-Route MIDI from one port to another through a Lua script that transforms notes, control changes, and other messages on the fly. Written in Go with the remapping logic fully delegated to Lua — edit your rules, restart, and you're done.
+MIDIポート間で流れるノート、コントロールチェンジなどのメッセージを、Luaスクリプトでリアルタイムに変換します。本体はGoで書かれ、リマッピングのロジックはすべてLuaに委譲されています。ルールを編集して再起動するだけで反映されます。
 
-## Features
+## 特徴
 
-- Real-time MIDI remapping between any two MIDI ports
-- Remapping rules written in Lua (notes, CCs, velocity scaling, key splits, etc.)
-- Cross-platform: macOS (Apple Silicon / Intel), Windows (x64), Linux (x64 / arm64)
-- Verbose mode with paired IN → OUT logging including raw hex bytes
-- Lightweight single-binary deployment
+- 任意の2つのMIDIポート間でリアルタイムにリマッピング
+- リマッピングルールはLuaで記述(ノート、CC、ベロシティスケーリング、キースプリットなど)
+- クロスプラットフォーム対応: macOS (Apple Silicon / Intel)、Windows (x64)、Linux (x64 / arm64)
+- verboseモードでIN → OUTをペアで、RAWの16進バイトと共に表示
+- シングルバイナリで配布
 
-## Quick Start
+## クイックスタート
 
 ```bash
-# 1. List available MIDI ports
+# 1. 利用可能なMIDIポート一覧を表示
 midimap -l
 
-# 2. Run the remapper
+# 2. リマッパーを起動
 midimap -i 0 -o 1 -s luascripts/example.lua
 
-# 3. With verbose logging
+# 3. verboseモードで起動
 midimap -i 0 -o 1 -s luascripts/example.lua -v
 ```
 
-## Installation
+## インストール
 
 ### macOS (Apple Silicon)
 
@@ -49,7 +49,7 @@ xattr -d com.apple.quarantine midimap
 ./midimap -l
 ```
 
-The `xattr` step removes the quarantine attribute that macOS attaches to unsigned downloaded binaries. Without it, Gatekeeper will block execution.
+`xattr` コマンドは、macOSが未署名のダウンロードバイナリに付与する隔離属性を解除します。これを行わないとGatekeeperによって実行がブロックされます。
 
 ### Windows (x64)
 
@@ -62,7 +62,7 @@ cd midimap\midimap-vX.Y.Z-windows-amd64
 .\midimap.exe -l
 ```
 
-On first run, Windows SmartScreen may warn about an unrecognized publisher. Click "More info" → "Run anyway".
+初回起動時にWindows SmartScreenが「認識されていない発行元」と警告する場合があります。「詳細情報」→「実行」をクリックしてください。
 
 ### Linux (x64)
 
@@ -73,7 +73,7 @@ cd midimap-vX.Y.Z-linux-amd64
 ./midimap -l
 ```
 
-Requires ALSA runtime (installed by default on most desktop distributions). On minimal installs:
+ALSAランタイムが必要です(多くのデスクトップディストリビューションにはデフォルトで入っています)。最小インストール環境では次のようにインストールしてください:
 
 ```bash
 sudo apt-get install libasound2
@@ -88,93 +88,93 @@ cd midimap-vX.Y.Z-linux-arm64
 ./midimap -l
 ```
 
-Same ALSA requirement as x64.
+x64と同じくALSAが必要です。
 
-## MIDI Port Setup
+## MIDIポートのセットアップ
 
 ### macOS (IAC Driver)
 
-macOS ships with a built-in virtual MIDI driver. Enable it once:
+macOSには仮想MIDIドライバが標準搭載されています。最初に有効化するだけです:
 
-1. Open **Audio MIDI Setup** (`/System/Applications/Utilities/Audio MIDI Setup.app`)
-2. Menu: **Window → Show MIDI Studio** (⌘2)
-3. Double-click the **IAC Driver** icon
-4. Check **"Device is online"**
-5. Add two ports using the **+** button, e.g. `midimap-in` and `midimap-out`
-6. Click **Apply**
+1. **Audio MIDI設定** を開く (`/System/Applications/Utilities/Audio MIDI設定.app`)
+2. メニュー: **ウィンドウ → MIDIスタジオを表示** (⌘2)
+3. **IACドライバ** のアイコンをダブルクリック
+4. **「装置はオンライン」** にチェック
+5. **+** ボタンでポートを2つ追加(例: `midimap-in`、`midimap-out`)
+6. **適用** をクリック
 
-Route your DAW or MIDI keyboard output to `midimap-in`, and listen for remapped MIDI on `midimap-out`.
+DAWやMIDIキーボードの出力を `midimap-in` に向け、リマップされたMIDIを `midimap-out` から受け取ります。
 
 ### Windows (loopMIDI)
 
-Windows has no built-in virtual MIDI driver. Install [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) (free):
+Windowsには仮想MIDIドライバが標準搭載されていません。[loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html)(無料)をインストールしてください:
 
-1. Install and launch loopMIDI
-2. Create two ports, e.g. `midimap-in` and `midimap-out`
+1. loopMIDIをインストールして起動
+2. ポートを2つ作成(例: `midimap-in`、`midimap-out`)
 
 ### Linux (ALSA)
 
-ALSA provides virtual MIDI ports through the `snd-virmidi` module:
+ALSAは `snd-virmidi` モジュールで仮想MIDIポートを提供します:
 
 ```bash
 sudo modprobe snd-virmidi
 ```
 
-Or use JACK/Pipewire's built-in MIDI routing if already installed.
+JACKやPipewireを既に使っているなら、そちらの内蔵MIDIルーティングも利用できます。
 
-## Usage
+## 使い方
 
 ```
 midimap -l
 midimap -i <in> -o <out> -s <script.lua> [-v]
 ```
 
-### Options
+### オプション
 
-| Flag | Description |
-|------|-------------|
-| `-i`, `-in <port>` | MIDI input port (name substring or number from `-l`) |
-| `-o`, `-out <port>` | MIDI output port (name substring or number from `-l`) |
-| `-l`, `-list` | List available MIDI ports and exit |
-| `-s`, `-script <file>` | Lua remap script (required) |
-| `-v`, `-verbose` | Print every MIDI event (IN and OUT) |
-| `-V`, `-version` | Show version and exit |
-| `-h`, `-help` | Show help |
+| フラグ | 説明 |
+|--------|------|
+| `-i`, `-in <ポート>` | MIDI入力ポート(名前の部分一致または `-l` の番号) |
+| `-o`, `-out <ポート>` | MIDI出力ポート(名前の部分一致または `-l` の番号) |
+| `-l`, `-list` | 利用可能なMIDIポートを一覧表示して終了 |
+| `-s`, `-script <ファイル>` | Luaリマップスクリプト(必須) |
+| `-v`, `-verbose` | すべてのMIDIイベントを表示 |
+| `-V`, `-version` | バージョンを表示して終了 |
+| `-h`, `-help` | ヘルプを表示 |
 
-### Examples
+### 使用例
 
 ```bash
-# List ports
+# ポート一覧
 midimap -l
 
-# Connect by number
+# 番号で指定
 midimap -i 0 -o 1
 
-# Connect by name (partial match)
+# 名前で指定(部分一致)
 midimap -i midimap-in -o midimap-out
 
-# Verbose mode with a specific script
+# 指定スクリプトでverboseモード起動
 midimap -i 0 -o 1 -s myrules.lua -v
 ```
 
-### Verbose Output Format
+### Verbose出力のフォーマット
 
-With `-v`, each MIDI event is shown as an IN → OUT pair with raw hex bytes:
+`-v` を付けると、各MIDIイベントがIN → OUTのペアとしてRAWの16進バイトと共に表示されます:
 
 ```
 NON C:00 N: 60 V:100(90 3C 64) -> NON C:00 N: 72 V:100(90 48 64)
 CC  C:00 C:  1 V: 64(B0 01 40) -> CC  C:00 C: 11 V: 64(B0 0B 40)
 ```
 
-Format:
-- `NON` = Note On, `NOF` = Note Off, `CC` = Control Change
-- `C:` = Channel, `N:` = Note, `V:` = Velocity/Value
+フォーマット:
+- `NON` = Note On、`NOF` = Note Off、`CC` = Control Change
+- `C:` = チャンネル、`N:` = ノート、`V:` = ベロシティ/値
 
-## Writing Remap Rules
+## リマップルールの書き方
 
-`midimap` calls Lua global functions for each MIDI event type. Define the ones you need; undefined events pass through unhandled (i.e. dropped).
+`midimap` は各MIDIイベントタイプに対応するLuaグローバル関数を呼び出します。必要な関数だけを定義してください。未定義のイベントはそのまま落ちます(出力されません)。
 
-### Minimal pass-through
+### 最小限のパススルー
 
 ```lua
 function on_note_on(ch, note, vel)
@@ -190,39 +190,39 @@ function on_cc(ch, cc, val)
 end
 ```
 
-### Callbacks you can define
+### 定義できるコールバック
 
-| Function | Arguments |
-|----------|-----------|
-| `on_note_on(ch, note, vel)` | Channel, note number, velocity (0–127) |
-| `on_note_off(ch, note, vel)` | Channel, note number, release velocity |
-| `on_cc(ch, cc, val)` | Channel, CC number, value (0–127) |
+| 関数 | 引数 |
+|------|------|
+| `on_note_on(ch, note, vel)` | チャンネル、ノート番号、ベロシティ (0〜127) |
+| `on_note_off(ch, note, vel)` | チャンネル、ノート番号、リリースベロシティ |
+| `on_cc(ch, cc, val)` | チャンネル、CC番号、値 (0〜127) |
 
-### Send functions (callable from Lua)
+### 送信関数(Luaから呼び出し可能)
 
-| Function | Arguments |
-|----------|-----------|
+| 関数 | 引数 |
+|------|------|
 | `send_note_on(ch, note, vel)` | |
-| `send_note_off(ch, note, vel)` | `vel` is accepted but ignored in output |
+| `send_note_off(ch, note, vel)` | `vel` は受け取るが出力では無視される |
 | `send_cc(ch, cc, val)` | |
 
-### Channel numbering
+### チャンネル番号について
 
-MIDI channel values in Lua use **0–15** (not 1–16 as shown in DAWs).
+LuaスクリプトでのMIDIチャンネル値は **0〜15** を使います(DAW画面上の表記 1〜16 ではありません)。
 
-| DAW display | Lua value |
+| DAW上の表記 | Luaでの値 |
 |-------------|-----------|
 | Ch 1        | 0         |
 | Ch 2        | 1         |
 | ...         | ...       |
 | Ch 16       | 15        |
 
-Note and CC numbers are 0–127 as usual.
+ノート番号・CC番号は従来通り 0〜127 です。
 
-### Example: transpose + CC remap
+### 例: 移調 + CCリマップ
 
 ```lua
--- Transpose channel 0 up one octave
+-- チャンネル0を1オクターブ上げる
 function on_note_on(ch, note, vel)
     if ch == 0 then
         send_note_on(ch, note + 12, vel)
@@ -239,7 +239,7 @@ function on_note_off(ch, note, vel)
     end
 end
 
--- Remap mod wheel (CC1) to expression (CC11)
+-- モジュレーションホイール(CC1)をエクスプレッション(CC11)にリマップ
 function on_cc(ch, cc, val)
     if cc == 1 then
         send_cc(ch, 11, val)
@@ -249,82 +249,95 @@ function on_cc(ch, cc, val)
 end
 ```
 
-See `luascripts/example.lua` for a working example.
+動作サンプルは `luascripts/example.lua` を参照してください。
 
-## Building from Source
+## ソースからビルド
 
-Requires Go 1.22+ and a C/C++ toolchain (cgo is used by the underlying RtMidi library).
+Go 1.22以上と、C/C++ツールチェーンが必要です(内部のRtMidiライブラリがcgoを使用するため)。
 
 ```bash
 git clone https://github.com/mamemomonga/midimap.git
 cd midimap
 
-# Build for your host
+# ホスト向けにビルド
 make build
 
-# Run directly
+# そのまま実行
 make run IN=0 OUT=1
 
-# With verbose
+# verboseで実行
 make dev IN=0 OUT=1
 
-# All Make targets
+# Makeターゲット一覧
 make help
 ```
 
-### Platform-specific build dependencies
+### プラットフォーム別のビルド依存
 
-- **macOS**: Xcode Command Line Tools (`xcode-select --install`)
-- **Windows**: MSVC Build Tools or MinGW-w64
-- **Linux**: `build-essential` and `libasound2-dev`
+- **macOS**: Xcodeコマンドラインツール (`xcode-select --install`)
+- **Windows**: MSVC Build ToolsまたはMinGW-w64
+- **Linux**: `build-essential` と `libasound2-dev`
   ```bash
   sudo apt-get install build-essential libasound2-dev
   ```
 
-### Cross-compilation
+### クロスコンパイル
 
-Cross-compiling with cgo is impractical across most platform boundaries. 
+cgoを使うプロジェクトのクロスコンパイルはOSを跨ぐと現実的ではありません。
 
-## Troubleshooting
+## トラブルシューティング
 
-**`midimap -l` shows no ports**
-- macOS: enable IAC Driver in Audio MIDI Setup (see above)
-- Windows: install loopMIDI
-- Linux: `sudo modprobe snd-virmidi` or connect a physical MIDI device
+### `midimap -l` でポートが表示されない
+- macOS: Audio MIDI設定でIACドライバを有効化(上記参照)
+- Windows: loopMIDIをインストール
+- Linux: `sudo modprobe snd-virmidi` または物理MIDIデバイスを接続
 
-**"permission denied" on first run (macOS / Linux)**
+### 初回起動時に「permission denied」(macOS / Linux)
 ```bash
 chmod +x midimap
 ```
 
-**Gatekeeper blocks execution (macOS)**
+### Gatekeeperで実行がブロックされる(macOS)
 ```bash
 xattr -d com.apple.quarantine midimap
 ```
 
-**Note Off velocity shows 64 in verbose output**
-This is expected. Many keyboards send Note Off as "Note On with velocity 0". The underlying MIDI library reports this as a Note Off with a placeholder velocity of 64. Compare the raw hex bytes to see the actual form on the wire (`90 ... 00` for running-status Note Off, `80 ... xx` for a true Note Off).
+### Verbose出力でNote Offのベロシティが64と表示される
+これは仕様どおりの挙動です。多くのキーボードはNote Offを「ベロシティ0のNote On」として送信します。内部で使っているMIDIライブラリはこれをNote Offとして報告しますが、リリースベロシティが存在しないためダミー値として64が入ります。実際のバイト列を確認するにはRAWの16進表示を見てください(`90 ... 00` ならrunning-status形式のNote Off、`80 ... xx` なら本物のNote Off)。
 
-**Lua script errors print but don't crash**
-Errors are logged to stderr; the remapper keeps running. Fix the script and restart.
+### Luaスクリプトのエラーが表示されるがクラッシュしない
+エラーはstderrに出力され、リマッパーは動作を継続します。スクリプトを修正して再起動してください。
 
-## Dependencies
+## ドキュメントの翻訳方針
 
-- [gomidi/midi](https://gitlab.com/gomidi/midi) — MIDI I/O (uses RtMidi under the hood)
-- [yuin/gopher-lua](https://github.com/yuin/gopher-lua) — Lua 5.1 VM in pure Go
+- 日本語がプライマリ、英語は自動生成
+  - `CLAUDE.md` ⇒ `CLAUDE-en.md`(Claude Code は参照しない)
+  - `README.md` ⇒ `README-en.md`
+- 翻訳ルール:
+  - 技術用語 (cgo, goroutine, MIDI, CC 等) は英語のまま
+  - コードブロック・ファイルパス・コマンド例は改変しない
+  - Markdown構造(見出し、リスト、表)は完全維持
+  - 自然な技術英語で、冗長にしない
+- 英語版を手で編集しないこと(次回翻訳で上書きされる)
+- 翻訳の実行: `make translate` または セッションで `/translate-docs`
 
-## License
+## 依存ライブラリ
 
-MIT License. See [LICENSE](./LICENSE) for the full text.
+- [gomidi/midi](https://gitlab.com/gomidi/midi) — MIDI I/O(内部でRtMidiを使用)
+- [yuin/gopher-lua](https://github.com/yuin/gopher-lua) — 純GoのLua 5.1 VM
 
-## Contributing
+## ライセンス
 
-Bug reports and pull requests welcome. For larger changes, please open an issue first to discuss what you'd like to change.
+MITライセンス。詳細は [LICENSE](./LICENSE) を参照してください。
 
-## Acknowledgments
+## コントリビューション
 
-Built on the excellent [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) C++ library by Gary Scavone.
+バグ報告やPull Requestを歓迎します。大きな変更を行う場合は、まずIssueで相談してください。
 
-## Note
+## 謝辞
 
-This was created using Claude Opus 4.7.
+Gary Scavone氏による優れたC++ライブラリ [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) の上に構築されています。
+
+## 備考
+
+制作には Claude Opus 4.7を使用しています。

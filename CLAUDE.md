@@ -10,8 +10,11 @@ Luaスクリプトでリマッピングルールを記述する MIDIリマッパ
 
 - `main.go` - CLI エントリ、フラグ解析、シグナルハンドリング
 - `bridge.go` - Lua ⇔ Go ブリッジ: dispatch、callLua、registerAPI、formatMsg
-- `scripts/` - ユーザー向け Lua リマップスクリプト
-  - `scripts/example.lua` - 最小サンプル(自動読み込みなし、-s は必須)
+- `scripts/` - ユーザー向け Lua リマップスクリプト(自動読み込みなし、-s は必須)
+  - `example.lua` - 最小サンプル(移調・ベロシティ半減・CC付け替え)
+  - `thru.lua` - 入力をそのまま出力に流すパススルー
+  - `L6max_Mono.lua` - ZOOM LiveTrak L6max向け、チャンネルコントロール(8ch独立)
+  - `L6max_Stereo.lua` - 同上のch1,2 および ch3,4のステレオリンク版
 
 ## 重要な設計判断
 
@@ -34,7 +37,7 @@ Luaスクリプトでリマッピングルールを記述する MIDIリマッパ
 IN と OUT イベントを「ラウンド」単位でペアリング(1つのIN、0個以上のOUT)。
 フォーマット: `NON C:cc N:nn V:vv(HH HH HH) -> NON C:cc N:nn V:vv(HH HH HH)`
 - 数値はスペース埋め (`%3d`、`%03d` ではない) で可読性優先
-- チャンネルはゼロ埋め (`%02d`)、慣例に従う
+- チャンネルもスペース埋め (`%2d`)、桁を揃えて可読性優先
 - RAWバイトは大文字16進、スペース区切り
 詳細は bridge.go の `formatMsg` と `eventLogger` を参照。
 

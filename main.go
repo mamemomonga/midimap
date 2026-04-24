@@ -36,8 +36,8 @@ OPTIONS:
 
 EXAMPLES:
   midimap -l
-  midimap -i 0 -o 1 -s scripts/example.lua
-  midimap -i midimap-in -o midimap-out -s scripts/mixer.lua -v
+  midimap -i 0 -o 1 -s luascripts/example.lua
+  midimap -i midimap-in -o midimap-out -s luascripts/mixer.lua -v
 `
 
 // 片方を長短どちらで書いても同じ変数を共有するフラグ

@@ -26,8 +26,8 @@ help:
 	@echo ""
 	@echo "Examples:"
 	@echo "  make build"
-	@echo "  make run IN=0 OUT=1 SCRIPT=scripts/example.lua"
-	@echo "  make dev IN=0 OUT=1 SCRIPT=scripts/example.lua"
+	@echo "  make run IN=0 OUT=1 SCRIPT=luascripts/example.lua"
+	@echo "  make dev IN=0 OUT=1 SCRIPT=luascripts/example.lua"
 	@echo "  make list"
 
 ## build: バイナリを bin/ にビルド

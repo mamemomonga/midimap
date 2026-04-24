@@ -10,7 +10,7 @@ Luaスクリプトでリマッピングルールを記述する MIDIリマッパ
 
 - `main.go` - CLI エントリ、フラグ解析、シグナルハンドリング
 - `bridge.go` - Lua ⇔ Go ブリッジ: dispatch、callLua、registerAPI、formatMsg
-- `scripts/` - ユーザー向け Lua リマップスクリプト(自動読み込みなし、-s は必須)
+- `luascripts/` - ユーザー向け Lua リマップスクリプト(自動読み込みなし、-s は必須)
   - `example.lua` - 最小サンプル(移調・ベロシティ半減・CC付け替え)
   - `thru.lua` - 入力をそのまま出力に流すパススルー
   - `L6max_Mono.lua` - ZOOM LiveTrak L6max向け、チャンネルコントロール(8ch独立)

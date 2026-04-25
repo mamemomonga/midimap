@@ -46,7 +46,9 @@ tar xzf midimap-vX.Y.Z-darwin-amd64.tar.gz
 cd midimap-vX.Y.Z-darwin-amd64
 ./midimap -l
 ```
-curlを使用してダウンロードした場合不要なことが多いですが、Safariなどを使用してダウンロードした場合は以下の`xattr`で隔離属性を解除する必要があります。これを行わないとGatekeeperによって実行がブロックされます。
+
+curlを使用してダウンロードした場合不要なことが多いですが、Safariなどを使用してダウンロードした場合は以下の`xattr`で隔離属性を解除する必要があります。
+隔離属性がついている場合、これを行わないとGatekeeperによって実行がブロックされます。
 
 ```bash
 xattr -d com.apple.quarantine midimap
@@ -176,23 +178,7 @@ CC  C:00 C:  1 V: 64(B0 01 40) -> CC  C:00 C: 11 V: 64(B0 0B 40)
 
 ## リマップルールの書き方
 
-`midimap` は各MIDIイベントタイプに対応するLuaグローバル関数を呼び出します。未定義のイベントはエラーにはならず無視されます。
-
-### 最小限のパススルー
-
-```lua
-function on_note_on(ch, note, vel)
-    send_note_on(ch, note, vel)
-end
-
-function on_note_off(ch, note, vel)
-    send_note_off(ch, note, vel)
-end
-
-function on_cc(ch, cc, val)
-    send_cc(ch, cc, val)
-end
-```
+`midimap` は各MIDIイベントタイプに対応するLuaグローバル関数をコールバックとして呼び出します。未定義のイベントはパススルーされず、破棄されます。
 
 ### 定義できるコールバック
 
@@ -212,10 +198,6 @@ end
 | `send_note_off(ch, note, vel)` | `vel` は受け取るが出力では無視される |
 | `send_cc(ch, cc, val)` | |
 
-### デバッグ出力
-
-Lua標準の `print(...)` がそのまま使えます(stdout出力)。`-v` のログと同じstdoutに混ざる点に注意してください。
-
 ### チャンネル番号について
 
 LuaスクリプトでのMIDIチャンネル値は **0〜15** を使います(DAW画面上の表記 1〜16 ではありません)。
@@ -229,7 +211,29 @@ LuaスクリプトでのMIDIチャンネル値は **0〜15** を使います(DAW
 
 ノート番号・CC番号は従来通り 0〜127 です。
 
-### 例: 移調 + CCリマップ
+### デバッグ出力
+
+Lua標準の `print(...)` がそのまま使えます(stdout出力)。`-v` のログと同じstdoutに混ざる点に注意してください。
+
+### スクリプト例
+
+#### 最小限のパススルー
+
+```lua
+function on_note_on(ch, note, vel)
+    send_note_on(ch, note, vel)
+end
+
+function on_note_off(ch, note, vel)
+    send_note_off(ch, note, vel)
+end
+
+function on_cc(ch, cc, val)
+    send_cc(ch, cc, val)
+end
+```
+
+#### 移調 + CCリマップ
 
 ```lua
 -- チャンネル0を1オクターブ上げる
@@ -293,7 +297,7 @@ make help
 
 ### クロスコンパイル
 
-cgoを使うため、別のOSのクロスコンパイルはおすすめできません。
+cgoを使うため、OSをまたぐクロスコンパイルはおすすめできません。
 
 ## トラブルシューティング
 
@@ -313,7 +317,14 @@ chmod +x midimap
 xattr -d com.apple.quarantine midimap
 ```
 
-## Luaスクリプトのエラーが表示されるがクラッシュしない
+### Verbose出力でNote Offのベロシティが64と表示される
+
+これは仕様どおりの挙動です。多くのキーボードはNote Offを「ベロシティ0のNote On」として送信します。
+内部で使っているMIDIライブラリはこれをNote Offとして報告しますが、リリースベロシティが存在しないためダミー値として64が入ります。
+実際のバイト列を確認するにはRAWの16進表示をご確認ください。(`90 ... 00` ならrunning-status形式のNote Off、`80 ... xx` なら本物のNote Off)。
+
+### Luaスクリプトのエラーが表示されるがクラッシュしない
+
 エラーはstderrに出力され、リマッパーは動作を継続します。スクリプトを修正して再起動してください。
 
 ## 依存ライブラリ

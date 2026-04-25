@@ -195,6 +195,7 @@ end
 | Function | Arguments |
 |----------|-----------|
 | `on_startup()` | None. Called once after the script is loaded and before MIDI input starts — useful for sending initialization CCs |
+| `on_shutdown()` | None. Called once just before exit (e.g. on Ctrl+C) — useful for resetting CCs or sending Note Offs |
 | `on_note_on(ch, note, vel)` | Channel, note number, velocity (0–127) |
 | `on_note_off(ch, note, vel)` | Channel, note number, release velocity |
 | `on_cc(ch, cc, val)` | Channel, CC number, value (0–127) |

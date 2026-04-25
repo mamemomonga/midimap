@@ -211,5 +211,8 @@ func run(inSpec, outSpec, script string, verbose bool) error {
 
 	fmt.Println("\nShutting down...")
 	stop()
+
+	// 終了時フック: Lua 側で on_shutdown() が定義されていれば呼ぶ
+	callLua(L, "on_shutdown")
 	return nil
 }

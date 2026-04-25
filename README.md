@@ -194,6 +194,7 @@ end
 
 | 関数 | 引数 |
 |------|------|
+| `on_startup()` | なし。スクリプト読み込み後、MIDI受信を開始する前に1回だけ呼ばれる。初期化用のCC送出などに使う |
 | `on_note_on(ch, note, vel)` | チャンネル、ノート番号、ベロシティ (0〜127) |
 | `on_note_off(ch, note, vel)` | チャンネル、ノート番号、リリースベロシティ |
 | `on_cc(ch, cc, val)` | チャンネル、CC番号、値 (0〜127) |
@@ -205,6 +206,10 @@ end
 | `send_note_on(ch, note, vel)` | |
 | `send_note_off(ch, note, vel)` | `vel` は受け取るが出力では無視される |
 | `send_cc(ch, cc, val)` | |
+
+### デバッグ出力
+
+Lua標準の `print(...)` がそのまま使えます(stdout出力)。`-v` のログと同じstdoutに混ざる点に注意してください。
 
 ### チャンネル番号について
 

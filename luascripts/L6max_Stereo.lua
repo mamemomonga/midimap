@@ -30,6 +30,9 @@ local remap_l6chs = {
     [18] = {72},     -- L6max EFX: ch8
 }
 
+function on_startup()
+end
+
 function on_note_on(ch, note, vel)
 end
 

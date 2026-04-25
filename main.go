@@ -182,6 +182,9 @@ func run(inSpec, outSpec, script string, verbose bool) error {
 		return fmt.Errorf("lua load: %w", err)
 	}
 
+	// 起動時フック: Lua 側で on_startup() が定義されていれば呼ぶ
+	callLua(L, "on_startup")
+
 	var mu sync.Mutex
 
 	stop, err := midi.ListenTo(in, func(msg midi.Message, ts int32) {

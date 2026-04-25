@@ -1,3 +1,9 @@
+function on_startup()
+    -- 起動時に CC で初期値を送る
+    send_cc(0, 7, 100)   -- Ch 1 Volume = 100
+    send_cc(0, 10, 64)   -- Ch 1 Pan = center
+end
+
 -- ch1 のノートを +12 に移調、ch2 はベロシティ半分
 function on_note_on(ch, note, vel)
     if ch == 0 then

@@ -194,6 +194,7 @@ end
 
 | Function | Arguments |
 |----------|-----------|
+| `on_startup()` | None. Called once after the script is loaded and before MIDI input starts — useful for sending initialization CCs |
 | `on_note_on(ch, note, vel)` | Channel, note number, velocity (0–127) |
 | `on_note_off(ch, note, vel)` | Channel, note number, release velocity |
 | `on_cc(ch, cc, val)` | Channel, CC number, value (0–127) |
@@ -205,6 +206,10 @@ end
 | `send_note_on(ch, note, vel)` | |
 | `send_note_off(ch, note, vel)` | `vel` is accepted but ignored in output |
 | `send_cc(ch, cc, val)` | |
+
+### Debug output
+
+Lua's standard `print(...)` works as-is (writes to stdout). Note that it shares stdout with `-v` verbose logging.
 
 ### Channel numbering
 

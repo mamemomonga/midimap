@@ -1,3 +1,6 @@
+function on_startup()
+end
+
 function on_note_on(ch, note, vel)
     send_note_on(ch, note, vel)
 end

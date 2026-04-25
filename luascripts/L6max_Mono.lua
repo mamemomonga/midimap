@@ -36,6 +36,20 @@ local remap_l6chs = {
     [20] = {72}, -- L6max EFX: ch8
 }
 
+-- エフェクトのValue値マッピング
+local L6EFXType = 117
+local efxtype_map = {
+    [0] = 10,  -- AI Noise Reduction
+    [1] = 32,  -- Hall
+    [2] = 53,  -- Room
+    [3] = 74,  -- Spring
+    [4] = 95,  -- Delay
+    [5] = 116, -- Echo
+}
+
+function on_startup()
+end
+
 function on_note_on(ch, note, vel)
 end
 
@@ -43,10 +57,26 @@ function on_note_off(ch, note, vel)
 end
 
 function on_cc(ch, cc, val)
+
     local l6chs = remap_l6chs[cc]
     if l6chs then
         for _, dcc in ipairs(l6chs) do
             send_cc(L6Channel, dcc, val)
         end
+    end
+
+    -- SOLOボタン(モーメンタリ) -> エフェクト切り替え
+    if cc == 29 and val == 127 then
+        send_cc(L6Channel, L6EFXType, efxtype_map[0]) -- Ch1Solo: AI Noise Reduction
+    elseif cc == 30 and val == 127 then
+        send_cc(L6Channel, L6EFXType, efxtype_map[1]) -- Ch2Solo: Hall
+    elseif cc == 31 and val == 127 then
+        send_cc(L6Channel, L6EFXType, efxtype_map[2]) -- Ch3Solo: Room
+    elseif cc == 33 and val == 127 then
+        send_cc(L6Channel, L6EFXType, efxtype_map[3]) -- Ch4Solo: Spring
+    elseif cc == 34 and val == 127 then
+        send_cc(L6Channel, L6EFXType, efxtype_map[4]) -- Ch5Solo: Delay
+    elseif cc == 35 and val == 127 then
+        send_cc(L6Channel, L6EFXType, efxtype_map[5]) -- Ch6Solo: Echo
     end
 end

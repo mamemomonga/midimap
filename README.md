@@ -35,7 +35,6 @@ midimap -i 0 -o 1 -s luascripts/example.lua -v
 curl -LO https://github.com/mamemomonga/midimap/releases/latest/download/midimap-vX.Y.Z-darwin-arm64.tar.gz
 tar xzf midimap-vX.Y.Z-darwin-arm64.tar.gz
 cd midimap-vX.Y.Z-darwin-arm64
-xattr -d com.apple.quarantine midimap
 ./midimap -l
 ```
 
@@ -45,11 +44,13 @@ xattr -d com.apple.quarantine midimap
 curl -LO https://github.com/mamemomonga/midimap/releases/latest/download/midimap-vX.Y.Z-darwin-amd64.tar.gz
 tar xzf midimap-vX.Y.Z-darwin-amd64.tar.gz
 cd midimap-vX.Y.Z-darwin-amd64
-xattr -d com.apple.quarantine midimap
 ./midimap -l
 ```
+curlを使用してダウンロードした場合不要なことが多いですが、Safariなどを使用してダウンロードした場合は以下の`xattr`で隔離属性を解除する必要があります。これを行わないとGatekeeperによって実行がブロックされます。
 
-`xattr` コマンドは、macOSが未署名のダウンロードバイナリに付与する隔離属性を解除します。これを行わないとGatekeeperによって実行がブロックされます。
+```bash
+xattr -d com.apple.quarantine midimap
+```
 
 ### Windows (x64)
 
@@ -91,6 +92,9 @@ cd midimap-vX.Y.Z-linux-arm64
 x64と同じくALSAが必要です。
 
 ## MIDIポートのセットアップ
+
+このツールで変換したMIDIを同じホスト内のMIDIアプリケーションで利用する場合は、MIDIのループバックを構成する必要があります。
+外部のMIDIデバイスに送受信する場合は、この手順は必要ありません。
 
 ### macOS (IAC Driver)
 
@@ -172,7 +176,7 @@ CC  C:00 C:  1 V: 64(B0 01 40) -> CC  C:00 C: 11 V: 64(B0 0B 40)
 
 ## リマップルールの書き方
 
-`midimap` は各MIDIイベントタイプに対応するLuaグローバル関数を呼び出します。必要な関数だけを定義してください。未定義のイベントはそのまま落ちます(出力されません)。
+`midimap` は各MIDIイベントタイプに対応するLuaグローバル関数を呼び出します。未定義のイベントはエラーにはならず無視されます。
 
 ### 最小限のパススルー
 
@@ -289,11 +293,12 @@ make help
 
 ### クロスコンパイル
 
-cgoを使うプロジェクトのクロスコンパイルはOSを跨ぐと現実的ではありません。
+cgoを使うため、別のOSのクロスコンパイルはおすすめできません。
 
 ## トラブルシューティング
 
 ### `midimap -l` でポートが表示されない
+- 必要なMIDIデバイスを接続していない
 - macOS: Audio MIDI設定でIACドライバを有効化(上記参照)
 - Windows: loopMIDIをインストール
 - Linux: `sudo modprobe snd-virmidi` または物理MIDIデバイスを接続
@@ -308,10 +313,7 @@ chmod +x midimap
 xattr -d com.apple.quarantine midimap
 ```
 
-### Verbose出力でNote Offのベロシティが64と表示される
-これは仕様どおりの挙動です。多くのキーボードはNote Offを「ベロシティ0のNote On」として送信します。内部で使っているMIDIライブラリはこれをNote Offとして報告しますが、リリースベロシティが存在しないためダミー値として64が入ります。実際のバイト列を確認するにはRAWの16進表示を見てください(`90 ... 00` ならrunning-status形式のNote Off、`80 ... xx` なら本物のNote Off)。
-
-### Luaスクリプトのエラーが表示されるがクラッシュしない
+## Luaスクリプトのエラーが表示されるがクラッシュしない
 エラーはstderrに出力され、リマッパーは動作を継続します。スクリプトを修正して再起動してください。
 
 ## 依存ライブラリ
@@ -333,4 +335,4 @@ Gary Scavone氏による優れたC++ライブラリ [RtMidi](https://www.music.m
 
 ## 備考
 
-制作には Claude Opus 4.7を使用しています。
+制作には Claude Codeを使用しています。

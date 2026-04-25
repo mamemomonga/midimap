@@ -46,6 +46,7 @@ tar xzf midimap-vX.Y.Z-darwin-amd64.tar.gz
 cd midimap-vX.Y.Z-darwin-amd64
 ./midimap -l
 ```
+
 curlでダウンロードした場合は隔離属性が付かないことが多いため不要ですが、Safariなどでダウンロードした場合は以下のコマンドで解除してください。
 隔離属性が残っているとGatekeeperによって実行がブロックされます。
 
@@ -320,7 +321,7 @@ xattr -d com.apple.quarantine midimap
 
 これは仕様どおりの挙動です。多くのキーボードはNote Offを「ベロシティ0のNote On」として送信します。
 内部で使っているMIDIライブラリはこれをNote Offとして報告しますが、リリースベロシティが存在しないためダミー値として64が入ります。
-実際のバイト列はRAWの16進表示で判別できます(90 ... 00 ならrunning-status形式のNote Off、80 ... xx なら本物のNote Off)。
+実際のバイト列はRAWの16進表示で判別できます(`90 ... 00` ならrunning-status形式のNote Off、`80 ... xx` なら本物のNote Off)。
 
 ### Luaスクリプトのエラーが表示されるがクラッシュしない
 

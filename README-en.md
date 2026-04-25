@@ -12,7 +12,7 @@ Route MIDI from one port to another through a Lua script that transforms notes, 
 - Remapping rules written in Lua (notes, CCs, velocity scaling, key splits, etc.)
 - Cross-platform: macOS (Apple Silicon / Intel), Windows (x64), Linux (x64 / arm64)
 - Verbose mode with paired IN → OUT logging including raw hex bytes
-- Lightweight single-binary deployment
+- Single-binary deployment
 
 ## Quick Start
 
@@ -35,7 +35,6 @@ midimap -i 0 -o 1 -s luascripts/example.lua -v
 curl -LO https://github.com/mamemomonga/midimap/releases/latest/download/midimap-vX.Y.Z-darwin-arm64.tar.gz
 tar xzf midimap-vX.Y.Z-darwin-arm64.tar.gz
 cd midimap-vX.Y.Z-darwin-arm64
-xattr -d com.apple.quarantine midimap
 ./midimap -l
 ```
 
@@ -45,11 +44,14 @@ xattr -d com.apple.quarantine midimap
 curl -LO https://github.com/mamemomonga/midimap/releases/latest/download/midimap-vX.Y.Z-darwin-amd64.tar.gz
 tar xzf midimap-vX.Y.Z-darwin-amd64.tar.gz
 cd midimap-vX.Y.Z-darwin-amd64
-xattr -d com.apple.quarantine midimap
 ./midimap -l
 ```
 
-The `xattr` step removes the quarantine attribute that macOS attaches to unsigned downloaded binaries. Without it, Gatekeeper will block execution.
+When downloading with curl the quarantine attribute is usually not attached, so this step is often unnecessary. If you downloaded via Safari or another browser, run the following command to remove it. If the quarantine attribute is left in place, Gatekeeper will block execution.
+
+```bash
+xattr -d com.apple.quarantine midimap
+```
 
 ### Windows (x64)
 
@@ -91,6 +93,9 @@ cd midimap-vX.Y.Z-linux-arm64
 Same ALSA requirement as x64.
 
 ## MIDI Port Setup
+
+If you want to use the remapped MIDI with another application on the same host, you need to set up a MIDI loopback.
+If you're sending to or receiving from external MIDI devices, this step is not required.
 
 ### macOS (IAC Driver)
 
@@ -137,7 +142,7 @@ midimap -i <in> -o <out> -s <script.lua> [-v]
 | `-o`, `-out <port>` | MIDI output port (name substring or number from `-l`) |
 | `-l`, `-list` | List available MIDI ports and exit |
 | `-s`, `-script <file>` | Lua remap script (required) |
-| `-v`, `-verbose` | Print every MIDI event (IN and OUT) |
+| `-v`, `-verbose` | Print every MIDI event |
 | `-V`, `-version` | Show version and exit |
 | `-h`, `-help` | Show help |
 
@@ -172,23 +177,7 @@ Format:
 
 ## Writing Remap Rules
 
-`midimap` calls Lua global functions for each MIDI event type. Define the ones you need; undefined events pass through unhandled (i.e. dropped).
-
-### Minimal pass-through
-
-```lua
-function on_note_on(ch, note, vel)
-    send_note_on(ch, note, vel)
-end
-
-function on_note_off(ch, note, vel)
-    send_note_off(ch, note, vel)
-end
-
-function on_cc(ch, cc, val)
-    send_cc(ch, cc, val)
-end
-```
+`midimap` invokes Lua global functions as callbacks for each MIDI event type. Undefined events are not passed through — they are dropped.
 
 ### Callbacks you can define
 
@@ -208,10 +197,6 @@ end
 | `send_note_off(ch, note, vel)` | `vel` is accepted but ignored in output |
 | `send_cc(ch, cc, val)` | |
 
-### Debug output
-
-Lua's standard `print(...)` works as-is (writes to stdout). Note that it shares stdout with `-v` verbose logging.
-
 ### Channel numbering
 
 MIDI channel values in Lua use **0–15** (not 1–16 as shown in DAWs).
@@ -225,7 +210,29 @@ MIDI channel values in Lua use **0–15** (not 1–16 as shown in DAWs).
 
 Note and CC numbers are 0–127 as usual.
 
-### Example: transpose + CC remap
+### Debug output
+
+Lua's standard `print(...)` works as-is (writes to stdout). Note that it shares stdout with `-v` verbose logging.
+
+### Script examples
+
+#### Minimal pass-through
+
+```lua
+function on_note_on(ch, note, vel)
+    send_note_on(ch, note, vel)
+end
+
+function on_note_off(ch, note, vel)
+    send_note_off(ch, note, vel)
+end
+
+function on_cc(ch, cc, val)
+    send_cc(ch, cc, val)
+end
+```
+
+#### Transpose + CC remap
 
 ```lua
 -- Transpose channel 0 up one octave
@@ -289,30 +296,35 @@ make help
 
 ### Cross-compilation
 
-Cross-compiling with cgo is impractical across most platform boundaries. 
+Because cgo is used, cross-compiling across operating systems is not recommended.
 
 ## Troubleshooting
 
-**`midimap -l` shows no ports**
+### `midimap -l` shows no ports
+- No required MIDI device is connected
 - macOS: enable IAC Driver in Audio MIDI Setup (see above)
 - Windows: install loopMIDI
 - Linux: `sudo modprobe snd-virmidi` or connect a physical MIDI device
 
-**"permission denied" on first run (macOS / Linux)**
+### "permission denied" on first run (macOS / Linux)
 ```bash
 chmod +x midimap
 ```
 
-**Gatekeeper blocks execution (macOS)**
+### Gatekeeper blocks execution (macOS)
 ```bash
 xattr -d com.apple.quarantine midimap
 ```
 
-**Note Off velocity shows 64 in verbose output**
-This is expected. Many keyboards send Note Off as "Note On with velocity 0". The underlying MIDI library reports this as a Note Off with a placeholder velocity of 64. Compare the raw hex bytes to see the actual form on the wire (`90 ... 00` for running-status Note Off, `80 ... xx` for a true Note Off).
+### Note Off velocity shows 64 in verbose output
 
-**Lua script errors print but don't crash**
-Errors are logged to stderr; the remapper keeps running. Fix the script and restart.
+This is expected behavior. Many keyboards send Note Off as "Note On with velocity 0".
+The underlying MIDI library reports this as a Note Off, but since no release velocity exists, a placeholder value of 64 is used.
+To check the actual byte sequence, refer to the raw hex display (`90 ... 00` for running-status Note Off, `80 ... xx` for a true Note Off).
+
+### Lua script errors print but don't crash
+
+Errors are written to stderr; the remapper keeps running. Fix the script and restart.
 
 ## Dependencies
 
@@ -333,4 +345,4 @@ Built on the excellent [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) C++ l
 
 ## Note
 
-This was created using Claude Opus 4.7.
+Created with Claude Code.
